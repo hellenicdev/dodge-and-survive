@@ -1,6 +1,8 @@
+let paused = false;
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Load images
 const bgImage = new Image();
 bgImage.src = 'background.jpg';
 
@@ -10,6 +12,7 @@ playerImage.src = 'player.png';
 const enemyImage = new Image();
 enemyImage.src = 'enemy.png';
 
+// Resize canvas
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -17,11 +20,12 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-// Sounds
+// Load sounds
 const bgMusic = document.getElementById('bg-music');
 const hitSound = document.getElementById('hit-sound');
 const spawnSound = document.getElementById('spawn-sound');
 
+// Game objects
 const player = {
   x: canvas.width / 2 - 20,
   y: canvas.height - 60,
@@ -38,8 +42,8 @@ let score = 0;
 let lives = 3;
 let gameOver = false;
 let started = false;
-let paused = false;
 
+// Draw functions
 function drawBackground() {
   ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
 }
@@ -85,6 +89,7 @@ function drawStartScreen() {
   ctx.fillText('Press Enter or Click to Start', canvas.width / 2 - 110, canvas.height / 2 + 10);
 }
 
+// Game logic
 function updateEnemies() {
   enemies.forEach(e => e.y += 2);
   enemies = enemies.filter(e => e.y < canvas.height);
@@ -105,6 +110,7 @@ function checkCollision(a, b) {
 }
 
 function handleCollisions() {
+  // Bullet hits enemy
   for (let i = enemies.length - 1; i >= 0; i--) {
     for (let j = player.bullets.length - 1; j >= 0; j--) {
       if (checkCollision(player.bullets[j], enemies[i])) {
@@ -118,6 +124,7 @@ function handleCollisions() {
     }
   }
 
+  // Enemy hits player
   for (let i = enemies.length - 1; i >= 0; i--) {
     if (checkCollision(enemies[i], player)) {
       enemies.splice(i, 1);
@@ -153,12 +160,12 @@ function resetGame() {
   score = 0;
   lives = 3;
   gameOver = false;
-  paused = false;
   player.x = canvas.width / 2 - 20;
   bgMusic.currentTime = 0;
   bgMusic.play();
 }
 
+// Game loop
 function gameLoop() {
   drawBackground();
 
@@ -168,7 +175,7 @@ function gameLoop() {
     return;
   }
 
-  if (!gameOver && !paused) {
+  if (!gameOver) {
     if (player.moveLeft && player.x > 0) player.x -= player.speed;
     if (player.moveRight && player.x + player.width < canvas.width)
       player.x += player.speed;
@@ -176,46 +183,27 @@ function gameLoop() {
     updateEnemies();
     updateBullets();
     handleCollisions();
+
+    drawPlayer();
+    drawEnemies();
+    drawBullets();
+    drawUI();
+  } else {
+    drawGameOver();
   }
-
-  drawPlayer();
-  drawEnemies();
-  drawBullets();
-  drawUI();
-
-  if (paused && !gameOver) {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'white';
-    ctx.font = '36px Arial';
-    ctx.fillText('Paused', canvas.width / 2 - 60, canvas.height / 2);
-  }
-
-  if (gameOver) drawGameOver();
 
   requestAnimationFrame(gameLoop);
 }
 
+// Controls
 document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' || e.key === 'a') player.moveLeft = true;
   if (e.key === 'ArrowRight' || e.key === 'd') player.moveRight = true;
   if (e.key === ' ' && started && !gameOver) shoot();
-
   if ((e.key === 'Enter' || e.key === ' ') && !started) {
     started = true;
-    bgMusic.currentTime = 0;
     bgMusic.play();
   }
-
-  if (e.key.toLowerCase() === 'p' && started && !gameOver) {
-    paused = !paused;
-    if (paused) {
-      bgMusic.pause();
-    } else {
-      bgMusic.play();
-    }
-  }
-
   if (e.key === 'r' && gameOver) resetGame();
 });
 
@@ -227,13 +215,13 @@ document.addEventListener('keyup', (e) => {
 canvas.addEventListener('click', () => {
   if (!started) {
     started = true;
-    bgMusic.currentTime = 0;
     bgMusic.play();
   }
 });
 
+// Start enemy spawning
 setInterval(() => {
-  if (started && !gameOver && !paused) createEnemy();
+  if (started && !gameOver) createEnemy();
 }, 1000);
 
 window.onload = gameLoop;
