@@ -1,39 +1,29 @@
 <!DOCTYPE html>
-<head>
-<meta name="description" content="A fast-paced arcade game where you dodge enemies and try to survive as long as possible."/>
-<meta name="keywords" content="HellenicDev, programming, HTML, CSS, JS, open-source, projects, web-developement, hellenic, dev, developer, game, recreation, games, dodge, survive, action, Dodge & Survive"/>
-<meta name="author" content="HellenicDev"/>
-<meta name="theme-color" content="#19336e"/>
 <html lang="en">
-<meta property="og:title" content="HellenicDev">
-<meta property="og:description" content="Programming projects, experiments, and tools by HellenicDev.">
-<meta property="og:image" content="https://hellenicdev.github.io/logo.webp">
-<meta property="og:url" content="https://hellenicdev.github.io">
-<meta property="og:type" content="website">
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-9FWQFZME3Z');
-</script>
+<head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="description" content="A fast-paced 2D arcade game. Dodge enemies, collect power-ups, and survive as long as possible!" />
+  <meta name="theme-color" content="#111" />
   <title>Dodge & Survive</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
+  <canvas id="gameCanvas" width="480" height="640"></canvas>
 
-  <!-- Sound Effects -->
+  <div id="touchControls">
+    <button id="leftBtn" aria-label="Move left">&#9664;</button>
+    <div id="centerButtons">
+      <button id="shootBtn" aria-label="Shoot">&#9733;</button>
+      <button id="pauseBtn" aria-label="Pause">&#9646;&#9646;</button>
+    </div>
+    <button id="rightBtn" aria-label="Move right">&#9654;</button>
+  </div>
+
   <audio id="bg-music" src="sounds/bg.mp3" loop preload="auto"></audio>
   <audio id="hit-sound" src="sounds/hit.wav" preload="auto"></audio>
   <audio id="spawn-sound" src="sounds/spawn.wav" preload="auto"></audio>
 
   <script src="script.js"></script>
 </body>
-<footer style="position: fixed; bottom: 0; left: 0; width: 100%; z-index: 9999; text-align: center; font-size: 14px; color: gray; background: white;
-">
-  © 2026 HellenicDev — All projects and content belong to HellenicDev.
-</footer>
 </html>

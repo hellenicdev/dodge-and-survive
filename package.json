@@ -1,12 +1,18 @@
 {
-  "name": "3d-multiplayer-game",
-  "version": "1.0.0",
-  "main": "server/index.js",
-  "scripts": {
-    "start": "node server/index.js"
+  "name": "dodge-and-survive",
+  "version": "2.0.0",
+  "description": "A fast-paced 2D arcade game built with HTML5 Canvas. Dodge enemies, collect power-ups, and survive as long as possible!",
+  "private": true,
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hellenicdev/dodge-and-survive.git"
   },
-  "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.5.4"
-  }
+  "keywords": ["game", "arcade", "canvas", "html5", "2d", "dodge"],
+  "author": "HellenicDev",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/hellenicdev/dodge-and-survive/issues"
+  },
+  "homepage": "https://hellenicdev.github.io/dodge-and-survive/"
 }
