@@ -1,6 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// --- Images ---
 const bgImage = new Image();
 bgImage.src = 'background.jpg';
 const playerImage = new Image();
@@ -8,11 +9,45 @@ playerImage.src = 'player.png';
 const enemyImage = new Image();
 enemyImage.src = 'enemy.png';
 
-const bgMusic = document.getElementById('bg-music');
-const hitSound = document.getElementById('hit-sound');
-const spawnSound = document.getElementById('spawn-sound');
+// --- Audio ---
+const bgMusic = new Audio('sounds/bg.mp3');
+bgMusic.loop = true;
 bgMusic.volume = 0.4;
+const hitSound = new Audio('sounds/hit.wav');
+const spawnSound = new Audio('sounds/spawn.wav');
 
+let audioUnlocked = false;
+function initAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  [bgMusic, hitSound, spawnSound].forEach(a => {
+    a.play().then(() => a.pause()).catch(() => {});
+  });
+}
+
+function playSound(sound) {
+  if (!sound) return;
+  sound.currentTime = 0;
+  sound.play().catch(() => {});
+}
+
+// --- Responsive canvas ---
+const wrapper = document.getElementById('wrapper');
+const touchControls = document.getElementById('touchControls');
+const isTouchDevice = document.documentElement.classList.contains('touch-device');
+
+function resizeCanvas() {
+  const controlsH = isTouchDevice ? touchControls.offsetHeight || 80 : 0;
+  const maxW = window.innerWidth;
+  const maxH = window.innerHeight - controlsH;
+  const scale = Math.min(maxW / 480, maxH / 640);
+  canvas.style.width = `${Math.floor(480 * scale)}px`;
+  canvas.style.height = `${Math.floor(640 * scale)}px`;
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+// --- Game state ---
 const player = {
   x: canvas.width / 2 - 20,
   y: canvas.height - 60,
@@ -21,7 +56,7 @@ const player = {
   speed: 5,
   moveLeft: false,
   moveRight: false,
-  bullets: []
+  bullets: [],
 };
 
 let enemies = [];
@@ -36,7 +71,9 @@ let enemySpeed = 2;
 let shieldActive = false;
 let shieldTimer = 0;
 let isNewHighScore = false;
+let frameCount = 0;
 
+// --- Drawing ---
 function drawBackground() {
   ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
 }
@@ -66,89 +103,6 @@ function drawPowerUps() {
 function drawBullets() {
   ctx.fillStyle = 'yellow';
   player.bullets.forEach(b => ctx.fillRect(b.x, b.y, 4, 10));
-}
-
-function updateEnemies() {
-  enemies.forEach(e => e.y += enemySpeed);
-  enemies = enemies.filter(e => e.y < canvas.height);
-}
-
-function updatePowerUps() {
-  powerUps.forEach(p => p.y += 2);
-  powerUps = powerUps.filter(p => p.y < canvas.height);
-}
-
-function updateBullets() {
-  player.bullets.forEach(b => b.y -= 8);
-  player.bullets = player.bullets.filter(b => b.y > 0);
-}
-
-function checkCollision(a, b) {
-  const aW = a.width || 4;
-  const aH = a.height || 10;
-  return a.x < b.x + b.width && a.x + aW > b.x && a.y < b.y + b.height && a.y + aH > b.y;
-}
-
-function handleCollisions() {
-  for (let i = enemies.length - 1; i >= 0; i--) {
-    if (checkCollision(player, enemies[i])) {
-      if (!shieldActive) {
-        lives--;
-        hitSound.currentTime = 0;
-        hitSound.play();
-        if (lives <= 0) {
-          gameOver = true;
-          bgMusic.pause();
-          isNewHighScore = score > highScore;
-          if (isNewHighScore) {
-            highScore = score;
-            localStorage.setItem('dodgeHighScore', highScore);
-          }
-        }
-      }
-      enemies.splice(i, 1);
-      continue;
-    }
-    for (let j = player.bullets.length - 1; j >= 0; j--) {
-      if (checkCollision(player.bullets[j], enemies[i])) {
-        enemies.splice(i, 1);
-        player.bullets.splice(j, 1);
-        score += 10;
-        hitSound.currentTime = 0;
-        hitSound.play();
-        break;
-      }
-    }
-  }
-
-  for (let i = powerUps.length - 1; i >= 0; i--) {
-    if (checkCollision(player, powerUps[i])) {
-      if (powerUps[i].type === 'shield') {
-        shieldActive = true;
-        shieldTimer = 300;
-      }
-      powerUps.splice(i, 1);
-    }
-  }
-}
-
-function shoot() {
-  player.bullets.push({
-    x: player.x + player.width / 2 - 2,
-    y: player.y
-  });
-}
-
-function createEnemy() {
-  const x = Math.random() * (canvas.width - 40);
-  enemies.push({ x, y: -40, width: 40, height: 40 });
-  spawnSound.currentTime = 0;
-  spawnSound.play();
-}
-
-function createPowerUp() {
-  const x = Math.random() * (canvas.width - 20);
-  powerUps.push({ x, y: -20, width: 20, height: 20, type: 'shield' });
 }
 
 function drawUI() {
@@ -193,6 +147,94 @@ function drawGameOver() {
   ctx.textAlign = 'left';
 }
 
+// --- Update ---
+function updateEnemies() {
+  enemies.forEach(e => e.y += enemySpeed);
+  enemies = enemies.filter(e => e.y < canvas.height);
+}
+
+function updatePowerUps() {
+  powerUps.forEach(p => p.y += 2);
+  powerUps = powerUps.filter(p => p.y < canvas.height);
+}
+
+function updateBullets() {
+  player.bullets.forEach(b => b.y -= 8);
+  player.bullets = player.bullets.filter(b => b.y > 0);
+}
+
+function checkCollision(a, b) {
+  const aW = a.width || 4;
+  const aH = a.height || 10;
+  return a.x < b.x + b.width && a.x + aW > b.x && a.y < b.y + b.height && a.y + aH > b.y;
+}
+
+function handleCollisions() {
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    if (checkCollision(player, enemies[i])) {
+      if (!shieldActive) {
+        lives--;
+        playSound(hitSound);
+        if (lives <= 0) {
+          gameOver = true;
+          bgMusic.pause();
+          isNewHighScore = score > highScore;
+          if (isNewHighScore) {
+            highScore = score;
+            localStorage.setItem('dodgeHighScore', highScore);
+          }
+        }
+      }
+      enemies.splice(i, 1);
+      continue;
+    }
+    for (let j = player.bullets.length - 1; j >= 0; j--) {
+      if (checkCollision(player.bullets[j], enemies[i])) {
+        enemies.splice(i, 1);
+        player.bullets.splice(j, 1);
+        score += 10;
+        playSound(hitSound);
+        break;
+      }
+    }
+  }
+
+  for (let i = powerUps.length - 1; i >= 0; i--) {
+    if (checkCollision(player, powerUps[i])) {
+      if (powerUps[i].type === 'shield') {
+        shieldActive = true;
+        shieldTimer = 300;
+      }
+      powerUps.splice(i, 1);
+    }
+  }
+}
+
+function shoot() {
+  player.bullets.push({
+    x: player.x + player.width / 2 - 2,
+    y: player.y,
+  });
+}
+
+function createEnemy() {
+  const x = Math.random() * (canvas.width - 40);
+  enemies.push({ x, y: -40, width: 40, height: 40 });
+  playSound(spawnSound);
+}
+
+function createPowerUp() {
+  const x = Math.random() * (canvas.width - 20);
+  powerUps.push({ x, y: -20, width: 20, height: 20, type: 'shield' });
+}
+
+function startGame() {
+  if (started) return;
+  started = true;
+  initAudio();
+  bgMusic.play().catch(() => {});
+}
+
 function resetGame() {
   enemies = [];
   powerUps = [];
@@ -203,13 +245,22 @@ function resetGame() {
   shieldActive = false;
   shieldTimer = 0;
   isNewHighScore = false;
+  frameCount = 0;
   player.x = canvas.width / 2 - 20;
   gameOver = false;
   started = true;
+  initAudio();
   bgMusic.currentTime = 0;
-  bgMusic.play();
+  bgMusic.play().catch(() => {});
 }
 
+function togglePause() {
+  if (!started || gameOver) return;
+  paused = !paused;
+  paused ? bgMusic.pause() : bgMusic.play().catch(() => {});
+}
+
+// --- Game loop ---
 function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
@@ -241,10 +292,11 @@ function gameLoop() {
     drawBullets();
     drawUI();
 
-    score++;
-    if (score % 500 === 0) enemySpeed += 0.5;
+    frameCount++;
+    if (frameCount % 60 === 0) score++;
 
-    if (score % 800 === 0) createPowerUp();
+    if (frameCount % 500 === 0) enemySpeed += 0.5;
+    if (frameCount % 800 === 0) createPowerUp();
 
     if (shieldActive) {
       shieldTimer--;
@@ -257,24 +309,14 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
+// --- Input: Keyboard ---
 document.addEventListener('keydown', (e) => {
+  initAudio();
   if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') player.moveLeft = true;
   if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') player.moveRight = true;
-  if (e.key === ' ' && started && !paused && !gameOver) {
-    e.preventDefault();
-    shoot();
-  }
-  if ((e.key === 'Enter' || e.key === ' ') && !started) {
-    e.preventDefault();
-    started = true;
-    bgMusic.play();
-  }
-  if (e.key === 'p' || e.key === 'P') {
-    if (started && !gameOver) {
-      paused = !paused;
-      paused ? bgMusic.pause() : bgMusic.play();
-    }
-  }
+  if (e.key === ' ' && started && !paused && !gameOver) { e.preventDefault(); shoot(); }
+  if ((e.key === 'Enter' || e.key === ' ') && !started) { e.preventDefault(); startGame(); }
+  if (e.key === 'p' || e.key === 'P') togglePause();
   if (e.key === 'r' && gameOver) resetGame();
 });
 
@@ -283,38 +325,37 @@ document.addEventListener('keyup', (e) => {
   if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') player.moveRight = false;
 });
 
-canvas.addEventListener('click', () => {
-  if (!started) {
-    started = true;
-    bgMusic.play();
-  } else if (!gameOver) {
-    paused = !paused;
-    paused ? bgMusic.pause() : bgMusic.play();
-  }
-});
+// --- Input: Canvas click (desktop only) ---
+if (!isTouchDevice) {
+  canvas.addEventListener('click', () => {
+    initAudio();
+    if (!started) { startGame(); }
+  });
+}
 
+// --- Input: Touch buttons ---
 function setupButton(id, onStart, onEnd) {
   const el = document.getElementById(id);
   if (!el) return;
   el.addEventListener('mousedown', onStart);
   el.addEventListener('mouseup', onEnd);
   el.addEventListener('mouseleave', onEnd);
-  el.addEventListener('touchstart', (e) => { e.preventDefault(); onStart(); });
+  el.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); onStart(); });
   el.addEventListener('touchend', (e) => { e.preventDefault(); onEnd(); });
 }
 
-setupButton('leftBtn', () => player.moveLeft = true, () => player.moveLeft = false);
-setupButton('rightBtn', () => player.moveRight = true, () => player.moveRight = false);
-setupButton('shootBtn', () => { if (started && !paused && !gameOver) shoot(); }, () => {});
-setupButton('pauseBtn', () => {
-  if (started && !gameOver) {
-    paused = !paused;
-    paused ? bgMusic.pause() : bgMusic.play();
-  }
-}, () => {});
+setupButton('leftBtn', () => { startGame(); player.moveLeft = true; }, () => player.moveLeft = false);
+setupButton('rightBtn', () => { startGame(); player.moveRight = true; }, () => player.moveRight = false);
+setupButton('shootBtn', () => { startGame(); if (started && !paused && !gameOver) shoot(); }, () => {});
+setupButton('pauseBtn', () => { startGame(); togglePause(); }, () => {});
 
+// --- Enemy spawn timer ---
 setInterval(() => {
   if (started && !gameOver && !paused) createEnemy();
 }, 800);
 
-window.onload = gameLoop;
+// --- Boot ---
+window.addEventListener('load', () => {
+  resizeCanvas();
+  gameLoop();
+});
