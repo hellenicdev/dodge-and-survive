@@ -1,4 +1,5 @@
 # Dodge & Survive
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/S6S31XB030)
 
 A fast-paced 2D arcade game built with HTML5 Canvas. Dodge falling enemies, shoot them down, and collect power-ups to survive as long as possible!
 
