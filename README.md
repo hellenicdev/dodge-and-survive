@@ -14,7 +14,7 @@ On mobile, use the on-screen touch buttons.
 
 ## Play Online
 
-https://hellenicdev.github.io/dodge-and-survive/
+https://hellenicdev.eu/dodge-and-survive/
 
 ## License
 
