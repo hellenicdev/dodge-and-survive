@@ -62,7 +62,8 @@ const player = {
 let enemies = [];
 let powerUps = [];
 let score = 0;
-let highScore = parseInt(localStorage.getItem('dodgeHighScore')) || 0;
+let highScore = 0;
+try { highScore = parseInt(localStorage.getItem('dodgeHighScore'), 10) || 0; } catch (_) { /* storage unavailable */ }
 let lives = 3;
 let gameOver = false;
 let started = false;
@@ -143,7 +144,7 @@ function drawGameOver() {
     ctx.fillText(`High Score: ${highScore}`, canvas.width / 2, canvas.height / 2 + 15);
   }
   ctx.font = '20px Arial';
-  ctx.fillText('Press R to Restart', canvas.width / 2, canvas.height / 2 + 55);
+  ctx.fillText(isTouchDevice ? 'Tap to Restart' : 'Press R or Click to Restart', canvas.width / 2, canvas.height / 2 + 55);
   ctx.textAlign = 'left';
 }
 
@@ -181,7 +182,7 @@ function handleCollisions() {
           isNewHighScore = score > highScore;
           if (isNewHighScore) {
             highScore = score;
-            localStorage.setItem('dodgeHighScore', highScore);
+            try { localStorage.setItem('dodgeHighScore', highScore); } catch (_) { /* ignore */ }
           }
         }
       }
@@ -317,7 +318,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === ' ' && started && !paused && !gameOver) { e.preventDefault(); shoot(); }
   if ((e.key === 'Enter' || e.key === ' ') && !started) { e.preventDefault(); startGame(); }
   if (e.key === 'p' || e.key === 'P') togglePause();
-  if (e.key === 'r' && gameOver) resetGame();
+  if ((e.key === 'r' || e.key === 'R') && gameOver) resetGame();
 });
 
 document.addEventListener('keyup', (e) => {
@@ -330,6 +331,15 @@ if (!isTouchDevice) {
   canvas.addEventListener('click', () => {
     initAudio();
     if (!started) { startGame(); }
+    else if (gameOver) { resetGame(); }
+  });
+} else {
+  // On touch devices, a tap on the game area restarts after game over.
+  canvas.addEventListener('touchstart', (e) => {
+    if (!gameOver) return;
+    e.preventDefault();
+    initAudio();
+    resetGame();
   });
 }
 
@@ -342,12 +352,34 @@ function setupButton(id, onStart, onEnd) {
   el.addEventListener('mouseleave', onEnd);
   el.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); onStart(); });
   el.addEventListener('touchend', (e) => { e.preventDefault(); onEnd(); });
+  // A cancelled touch (e.g. a system gesture) must not leave the ship moving.
+  el.addEventListener('touchcancel', onEnd);
 }
 
 setupButton('leftBtn', () => { startGame(); player.moveLeft = true; }, () => player.moveLeft = false);
 setupButton('rightBtn', () => { startGame(); player.moveRight = true; }, () => player.moveRight = false);
-setupButton('shootBtn', () => { startGame(); if (started && !paused && !gameOver) shoot(); }, () => {});
-setupButton('pauseBtn', () => { startGame(); togglePause(); }, () => {});
+setupButton('shootBtn', () => {
+  if (gameOver) { resetGame(); return; }
+  startGame();
+  if (started && !paused) shoot();
+}, () => {});
+setupButton('pauseBtn', () => {
+  // The first tap starts the game; it should not also pause it straight away.
+  if (!started) { startGame(); return; }
+  if (gameOver) { resetGame(); return; }
+  togglePause();
+}, () => {});
+
+// Pause automatically when the tab is hidden so the player doesn't lose lives.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && started && !gameOver && !paused) togglePause();
+});
+
+// Releasing keys while the window is unfocused would otherwise leave the ship moving.
+window.addEventListener('blur', () => {
+  player.moveLeft = false;
+  player.moveRight = false;
+});
 
 // --- Enemy spawn timer ---
 setInterval(() => {

@@ -5,7 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="description" content="A fast-paced 2D arcade game. Dodge enemies, collect power-ups, and survive as long as possible!" />
   <meta name="theme-color" content="#000" />
-  <title>Dodge & Survive</title>
+  <meta name="author" content="HellenicDev" />
+  <meta property="og:title" content="Dodge &amp; Survive | HellenicDev" />
+  <meta property="og:description" content="A fast-paced 2D arcade game. Dodge enemies, collect power-ups, and survive as long as possible!" />
+  <meta property="og:image" content="https://hellenicdev.eu/dodge-and-survive/player.png" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="player.png" type="image/png" />
+  <title>Dodge &amp; Survive | HellenicDev</title>
   <link rel="canonical" href="https://hellenicdev.eu/dodge-and-survive/" />
   <meta property="og:url" content="https://hellenicdev.eu/dodge-and-survive/" />
   <link rel="stylesheet" href="style.css" />
@@ -13,14 +19,14 @@
 </head>
 <body>
   <div id="wrapper">
-    <canvas id="gameCanvas" width="480" height="640"></canvas>
+    <canvas id="gameCanvas" width="480" height="640" role="img" aria-label="Dodge &amp; Survive game. Use the arrow keys or A and D to move, Space to shoot, P to pause."></canvas>
     <div id="touchControls">
-      <button id="leftBtn" aria-label="Move left">&#9664;</button>
+      <button type="button" id="leftBtn" aria-label="Move left">&#9664;</button>
       <div id="centerButtons">
-        <button id="shootBtn" aria-label="Shoot">&#9733;</button>
-        <button id="pauseBtn" aria-label="Pause">&#9646;&#9646;</button>
+        <button type="button" id="shootBtn" aria-label="Shoot">&#9733;</button>
+        <button type="button" id="pauseBtn" aria-label="Pause">&#9646;&#9646;</button>
       </div>
-      <button id="rightBtn" aria-label="Move right">&#9654;</button>
+      <button type="button" id="rightBtn" aria-label="Move right">&#9654;</button>
     </div>
   </div>
   <script src="script.js"></script>
