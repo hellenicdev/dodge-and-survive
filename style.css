@@ -83,3 +83,8 @@ canvas {
     min-width: 64px;
   }
 }
+
+#touchControls button:focus-visible {
+  outline: 3px solid #ffd54f;
+  outline-offset: 3px;
+}
